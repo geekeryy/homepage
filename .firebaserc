@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "geekeryy"
+  },
+  "targets": {
+    "geekeryy": {
+      "hosting": {
+        "homepage": [
+          "geekeryy"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}

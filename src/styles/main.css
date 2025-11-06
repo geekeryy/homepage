@@ -1,0 +1,140 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu',
+    'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', 'Microsoft YaHei', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f5f7fa;
+  color: #303133;
+  line-height: 1.6;
+}
+
+#app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 平滑滚动 */
+html {
+  scroll-behavior: smooth;
+}
+
+/* 自定义滚动条 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #409eff;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #66b1ff;
+}
+
+/* 链接样式 */
+a {
+  text-decoration: none;
+  color: inherit;
+  transition: color 0.3s;
+}
+
+a:hover {
+  color: #409eff;
+}
+
+/* 页面过渡动画 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.fade-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+/* 卡片 hover 效果 */
+.card-hover {
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.card-hover:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* 容器最大宽度 */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* 占位图片样式 */
+img[src*="placeholder"],
+img[src*="/images/"] {
+  background: linear-gradient(135deg, #95a6f2 0%, #f1ebeb 100%);
+  object-fit: cover;
+}
+
+/* 加载状态优化 */
+.el-loading-mask {
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
+/* 按钮优化 */
+.el-button {
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+/* 卡片优化 */
+.el-card {
+  border-radius: 12px;
+  border: none;
+}
+
+/* 标签优化 */
+.el-tag {
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 15px;
+  }
+
+  body {
+    font-size: 14px;
+  }
+}
+
+/* 打印样式 */
+@media print {
+  .site-header,
+  .site-footer {
+    display: none;
+  }
+}
+

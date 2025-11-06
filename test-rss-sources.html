@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>测试 RSS 源</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 1000px; margin: 20px auto; padding: 20px; }
+    .source { border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 5px; }
+    .success { background: #d4edda; }
+    .error { background: #f8d7da; }
+    .loading { background: #fff3cd; }
+    h2 { margin-top: 0; }
+    .news-item { margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <h1>测试所有 RSS 源</h1>
+  <div id="results"></div>
+
+  <script type="module">
+    const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
+    
+    const sources = [
+      {
+        id: "hacker-news",
+        name: "Hacker News",
+        url: "https://hnrss.org/frontpage",
+        category: "科技"
+      },
+      {
+        id: "github-trending",
+        name: "GitHub Trending",
+        url: "https://mshibanami.github.io/GitHubTrendingRSS/daily/all.xml",
+        category: "开源"
+      },
+      {
+        id: "ruanyifeng-weekly",
+        name: "阮一峰的网络日志",
+        url: "https://www.ruanyifeng.com/blog/atom.xml",
+        category: "技术周刊"
+      },
+      {
+        id: "v2ex-tech",
+        name: "V2EX - 技术",
+        url: "https://www.v2ex.com/feed/tech.xml",
+        category: "技术讨论"
+      }
+    ];
+
+    async function testSource(source) {
+      const resultDiv = document.createElement('div');
+      resultDiv.className = 'source loading';
+      resultDiv.innerHTML = `<h2>${source.name}</h2><p>正在加载...</p>`;
+      document.getElementById('results').appendChild(resultDiv);
+
+      try {
+        const proxyUrl = CORS_PROXY + encodeURIComponent(source.url);
+        const response = await fetch(proxyUrl);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const xmlText = await response.text();
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+
+        const parserError = xmlDoc.querySelector('parsererror');
+        if (parserError) {
+          throw new Error('XML 解析失败');
+        }
+
+        let items = xmlDoc.querySelectorAll('item');
+        if (items.length === 0) {
+          items = xmlDoc.querySelectorAll('entry');
+        }
+
+        if (items.length === 0) {
+          throw new Error('未找到新闻条目');
+        }
+
+        const newsHTML = Array.from(items).slice(0, 3).map((item, idx) => {
+          const title = item.querySelector('title')?.textContent || '无标题';
+          const link = item.querySelector('link')?.textContent || 
+                      item.querySelector('link')?.getAttribute('href') || '#';
+          return `<div class="news-item">${idx + 1}. ${title}<br><small>${link}</small></div>`;
+        }).join('');
+
+        resultDiv.className = 'source success';
+        resultDiv.innerHTML = `
+          <h2>✅ ${source.name}</h2>
+          <p>类别: ${source.category} | 获取了 ${items.length} 条新闻</p>
+          <details>
+            <summary>查看前3条新闻</summary>
+            ${newsHTML}
+          </details>
+        `;
+
+      } catch (error) {
+        resultDiv.className = 'source error';
+        resultDiv.innerHTML = `
+          <h2>❌ ${source.name}</h2>
+          <p>错误: ${error.message}</p>
+        `;
+      }
+    }
+
+    // 测试所有源
+    sources.forEach(source => testSource(source));
+  </script>
+</body>
+</html>
+

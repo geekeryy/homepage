@@ -1,0 +1,44 @@
+{
+  "sources": [
+    {
+      "id": "hacker-news",
+      "name": "Hacker News",
+      "url": "https://hnrss.org/frontpage",
+      "category": "科技",
+      "enabled": true,
+      "description": "Hacker News 科技新闻"
+    },
+    {
+      "id": "github-trending",
+      "name": "GitHub Trending",
+      "url": "https://mshibanami.github.io/GitHubTrendingRSS/daily/all.xml",
+      "category": "开源",
+      "enabled": false,
+      "description": "GitHub 热门项目（该源暂时不可用）"
+    },
+    {
+      "id": "ruanyifeng-weekly",
+      "name": "阮一峰的网络日志",
+      "url": "https://www.ruanyifeng.com/blog/atom.xml",
+      "category": "技术周刊",
+      "enabled": true,
+      "description": "阮一峰的技术博客"
+    },
+    {
+      "id": "techcrunch",
+      "name": "TechCrunch",
+      "url": "https://techcrunch.com/feed/",
+      "category": "科技资讯",
+      "enabled": false,
+      "description": "TechCrunch 科技新闻"
+    },
+    {
+      "id": "v2ex-tech",
+      "name": "V2EX - 技术",
+      "url": "https://www.v2ex.com/feed/tech.xml",
+      "category": "技术讨论",
+      "enabled": false,
+      "description": "V2EX 技术讨论（该源暂时不可用）"
+    }
+  ]
+}

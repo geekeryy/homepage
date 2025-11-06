@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1,
+    "title": "Vue 3 组合式 API 最佳实践",
+    "summary": "深入探讨 Vue 3 组合式 API 的使用技巧和最佳实践，帮助开发者更好地组织代码和提升开发效率。",
+    "content": "# Vue 3 组合式 API 最佳实践\n\n## 引言\n\nVue 3 引入了组合式 API（Composition API），为我们提供了一种更灵活的方式来组织组件逻辑。\n\n## 核心概念\n\n### setup 函数\n\nsetup 函数是组合式 API 的入口点，它在组件创建之前执行。\n\n```javascript\nimport { ref, computed } from 'vue'\n\nexport default {\n  setup() {\n    const count = ref(0)\n    const double = computed(() => count.value * 2)\n    \n    return { count, double }\n  }\n}\n```\n\n## 最佳实践\n\n1. **使用组合函数封装可复用逻辑**\n2. **合理使用 ref 和 reactive**\n3. **利用 computed 进行派生状态计算**\n4. **使用 watchEffect 和 watch 处理副作用**\n\n## 总结\n\n组合式 API 让我们的代码更加模块化和可维护。",
+    "coverImage": "/images/articles/vue3-api.jpg",
+    "tags": ["Vue", "TypeScript", "前端"],
+    "createdAt": "2024-12-15",
+    "readingTime": "8 分钟"
+  },
+  {
+    "id": 2,
+    "title": "Golang 并发编程指南",
+    "summary": "探索 Golang 的并发模型，学习如何使用 goroutines 和 channels 构建高性能应用。",
+    "content": "# Golang 并发编程指南\n\n## 为什么选择 Go\n\nGo 语言在并发编程方面有着天然的优势，其轻量级的 goroutines 和简洁的 channel 机制让并发编程变得简单。\n\n## Goroutines\n\nGoroutines 是 Go 语言中的轻量级线程。\n\n```go\ngo func() {\n    fmt.Println(\"Hello from goroutine\")\n}()\n```\n\n## Channels\n\nChannels 是 goroutines 之间通信的管道。\n\n```go\nch := make(chan int)\ngo func() {\n    ch <- 42\n}()\nvalue := <-ch\n```\n\n## 最佳实践\n\n1. 避免共享内存，使用 channels 通信\n2. 使用 sync.WaitGroup 等待 goroutines 完成\n3. 利用 context 控制 goroutines 生命周期\n\n## 总结\n\nGo 的并发模型简单而强大，是构建高性能服务的理想选择。",
+    "coverImage": "/images/articles/golang-concurrency.jpg",
+    "tags": ["Golang", "并发", "后端"],
+    "createdAt": "2024-12-10",
+    "readingTime": "10 分钟"
+  },
+  {
+    "id": 3,
+    "title": "Docker 容器化最佳实践",
+    "summary": "学习如何使用 Docker 容器化应用，提升开发效率和部署一致性。",
+    "content": "# Docker 容器化最佳实践\n\n## 什么是 Docker\n\nDocker 是一个开源的容器化平台，可以帮助开发者打包、分发和运行应用。\n\n## 核心概念\n\n### Dockerfile\n\n```dockerfile\nFROM node:18-alpine\nWORKDIR /app\nCOPY package*.json ./\nRUN npm install\nCOPY . .\nEXPOSE 3000\nCMD [\"npm\", \"start\"]\n```\n\n### Docker Compose\n\n```yaml\nversion: '3.8'\nservices:\n  web:\n    build: .\n    ports:\n      - \"3000:3000\"\n  db:\n    image: postgres:14\n```\n\n## 最佳实践\n\n1. 使用多阶段构建减小镜像体积\n2. 利用 .dockerignore 排除不必要的文件\n3. 合理使用缓存层加速构建\n4. 使用健康检查确保容器正常运行\n\n## 总结\n\nDocker 是现代应用开发和部署的标准工具。",
+    "coverImage": "/images/articles/docker.jpg",
+    "tags": ["Docker", "DevOps", "容器"],
+    "createdAt": "2024-12-05",
+    "readingTime": "12 分钟"
+  }
+]
