@@ -90,10 +90,21 @@ a:hover {
 }
 
 /* 占位图片样式 */
-img[src*="placeholder"],
-img[src*="/images/"] {
+img[src*="placeholder"] {
   background: linear-gradient(135deg, #95a6f2 0%, #f1ebeb 100%);
   object-fit: cover;
+}
+
+/* 项目和文章图片的占位背景 */
+img[src*="/images/projects/"]:not([src*="logo"]),
+img[src*="/images/articles/"]:not([src*="logo"]) {
+  background: linear-gradient(135deg, #95a6f2 0%, #f1ebeb 100%);
+  object-fit: cover;
+}
+
+/* 确保logo保持透明背景 */
+img[src*="logo"] {
+  background: transparent !important;
 }
 
 /* 加载状态优化 */

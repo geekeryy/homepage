@@ -126,6 +126,7 @@ const handleMenuSelect = (index: string) => {
   width: 40px;
   height: 40px;
   transition: transform 0.3s ease;
+  background: transparent !important;
 }
 
 .logo:hover .logo-icon {
