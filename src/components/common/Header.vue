@@ -20,10 +20,7 @@
           >
             <el-menu-item index="/">首页</el-menu-item>
             <el-menu-item index="/news">新闻</el-menu-item>
-            <!-- <el-menu-item index="/blog">博客</el-menu-item> -->
-            <el-menu-item index="external-blog">
-              <a href="https://blog.jiangyang.com" target="_blank">博客</a>
-            </el-menu-item>
+            <!-- <el-menu-item index="">博客</el-menu-item> -->
             <el-menu-item index="/projects">项目</el-menu-item>
             <el-menu-item index="/about">关于</el-menu-item>
           </el-menu>
@@ -47,7 +44,7 @@
           <el-icon><Tickets /></el-icon>
           <span>新闻</span>
         </el-menu-item>
-        <el-menu-item index="/blog">
+        <el-menu-item index="/">
           <el-icon><Document /></el-icon>
           <span>博客</span>
         </el-menu-item>

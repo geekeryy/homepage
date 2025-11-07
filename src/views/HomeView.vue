@@ -18,7 +18,6 @@
               :title="card.title"
               :description="card.description"
               :route="card.route"
-              :link="card.link"
               :button-text="card.buttonText"
             />
           </el-col>
@@ -72,8 +71,7 @@ const featureCards = [
     iconColor: '#67c23a',
     title: '技术博客',
     description: '阅读技术文章和开发经验分享，探索编程的乐趣',
-    route: '/blog',
-    link: 'https://blog.jiangyang.com',
+    route: '/',
     buttonText: '阅读博客',
   },
   {

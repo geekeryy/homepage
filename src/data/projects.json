@@ -1,6 +1,14 @@
 [
   {
     "id": 1,
+    "name": "Process Monitor",
+    "description": "功能强大的进程监控工具，可实时监控进程的运行状态、内存使用情况、CPU 使用率等关键指标。支持生成详细的测试报告和直观的监控图表，帮助开发者快速定位性能瓶颈和异常问题。",
+    "techStack": ["Go", "监控", "性能分析", "可视化"],
+    "imageUrl": "/images/projects/process-monitor.jpg",
+    "githubUrl": "https://github.com/geekeryy/process-monitor"
+  },
+  {
+    "id": 2,
     "name": "分布式IM系统",
     "description": "基于 Go 语言开发的分布式即时通讯系统，支持单聊、群聊、消息推送等功能。采用微服务架构设计，使用 WebSocket 实现实时通信，支持高并发场景。项目持续更新中，致力于打造高性能、可扩展的 IM 解决方案。",
     "techStack": ["Go", "WebSocket", "微服务", "Redis", "MySQL"],
@@ -8,20 +16,12 @@
     "githubUrl": "https://github.com/geekeryy/im"
   },
   {
-    "id": 2,
+    "id": 3,
     "name": "API-Hub",
     "description": "基于 go-zero 微服务框架构建的开箱即用业务开发脚手架。集成了服务注册发现、负载均衡、熔断降级、链路追踪等微服务基础能力。提供标准化的项目结构和最佳实践，大幅提升微服务项目开发效率。",
     "techStack": ["Go", "go-zero", "微服务", "gRPC", "Kubernetes"],
     "imageUrl": "",
     "githubUrl": "https://github.com/geekeryy/api-hub"
-  },
-  {
-    "id": 3,
-    "name": "Process Monitor",
-    "description": "功能强大的进程监控工具，可实时监控进程的运行状态、内存使用情况、CPU 使用率等关键指标。支持生成详细的测试报告和直观的监控图表，帮助开发者快速定位性能瓶颈和异常问题。",
-    "techStack": ["Go", "监控", "性能分析", "可视化"],
-    "imageUrl": "/images/projects/process-monitor.jpg",
-    "githubUrl": "https://github.com/geekeryy/process-monitor"
   },
   {
     "id": 4,

@@ -25,7 +25,6 @@ interface Props {
   title: string
   description: string
   route: string
-  link?: string
   buttonText: string
 }
 
@@ -33,10 +32,6 @@ const props = defineProps<Props>()
 const router = useRouter()
 
 const navigate = () => {
-  if (props.link) {
-    window.open(props.link, '_blank')
-    return
-  }
   router.push(props.route)
 }
 </script>

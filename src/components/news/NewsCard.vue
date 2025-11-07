@@ -11,6 +11,20 @@
         <el-tag v-if="news.isRead" type="info" size="small" class="read-tag">
           已读
         </el-tag>
+        <!-- 快捷阅读按钮 -->
+        <el-tooltip
+          v-if="!news.isRead"
+          content="标记为已读"
+          placement="top"
+        >
+          <el-button
+            :icon="Check"
+            circle
+            size="small"
+            class="quick-read-btn"
+            @click="handleQuickRead"
+          />
+        </el-tooltip>
       </div>
     </div>
     <h3 class="news-title">
@@ -29,12 +43,13 @@
 </template>
 
 <script setup lang="ts">
-import { ArrowRight } from '@element-plus/icons-vue'
+import { ArrowRight, Check } from '@element-plus/icons-vue'
 import dayjs from 'dayjs'
 import 'dayjs/locale/zh-cn'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import type { News } from '@/types'
 import { markNewsAsRead } from '@/services/newsStorage'
+import { ElMessage } from 'element-plus'
 
 dayjs.extend(relativeTime)
 dayjs.locale('zh-cn')
@@ -45,6 +60,7 @@ interface Props {
 
 interface Emits {
   (e: 'update:isRead', value: boolean): void
+  (e: 'read-status-changed'): void
 }
 
 const props = defineProps<Props>()
@@ -72,7 +88,13 @@ const markAsRead = () => {
     // 更新组件状态
     props.news.isRead = true
     emit('update:isRead', true)
+    emit('read-status-changed')
   }
+}
+
+const handleQuickRead = () => {
+  markAsRead()
+  ElMessage.success('已标记为已读')
 }
 
 const handleLinkClick = (e: MouseEvent) => {
@@ -124,6 +146,19 @@ const openNews = () => {
 
 .read-tag {
   font-size: 10px;
+}
+
+.quick-read-btn {
+  transition: all 0.3s ease;
+  border-color: #67c23a;
+  color: #67c23a;
+}
+
+.quick-read-btn:hover {
+  background-color: #67c23a;
+  color: white;
+  border-color: #67c23a;
+  transform: scale(1.1);
 }
 
 .news-title {

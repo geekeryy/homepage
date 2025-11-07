@@ -8,7 +8,6 @@
             <li><router-link to="/">首页</router-link></li>
             <li><router-link to="/news">新闻</router-link></li>
             <!-- <li><router-link to="/blog">博客</router-link></li> -->
-            <li><a href="https://blog.jiangyang.com" target="_blank">博客</a></li>
             <li><router-link to="/projects">项目</router-link></li>
           </ul>
         </div>

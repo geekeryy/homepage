@@ -48,15 +48,9 @@ const clearCacheFromStorage = (): void => {
 // 初始化时从 localStorage 恢复缓存
 newsCache = loadCacheFromStorage()
 
-// 使用本地代理API（开发环境）或直接访问（如果RSS源支持CORS）
 const getProxiedUrl = (url: string): string => {
-  // 在开发环境使用本地代理
-  if (import.meta.env.DEV) {
-    return `/api/rss?url=${encodeURIComponent(url)}`
-  }
-  // 生产环境直接尝试访问（某些RSS源支持CORS）
-  // 如果不支持，后续需要配置生产环境的代理
-  return url
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || ''
+  return `${baseUrl}/api/v1/gateway/explorer/rss-proxy?url=${encodeURIComponent(url)}`
 }
 
 // 浏览器兼容的 RSS 解析器
@@ -186,7 +180,7 @@ const fetchFromRSSSource = async (
     const proxiedUrl = getProxiedUrl(sourceUrl)
     const response = await fetch(proxiedUrl, {
       headers: {
-        Accept: 'application/rss+xml, application/xml, text/xml, */*',
+        Accept: 'application/json, application/rss+xml, application/xml, text/xml, */*',
       },
     })
 
@@ -194,7 +188,14 @@ const fetchFromRSSSource = async (
       throw new Error(`HTTP ${response.status}`)
     }
 
-    const xmlText = await response.text()
+    // 新API返回JSON格式 {content: "..."}
+    const jsonData = await response.json()
+    const xmlText = jsonData.data.content
+
+    if (!xmlText) {
+      throw new Error('API返回的数据中没有content字段')
+    }
+
     const items = parseRSSFromXML(xmlText, sourceName, sourceCategory)
     console.log(`✅ 从 ${sourceName} 获取了 ${items.length} 条新闻`)
     return items
@@ -245,6 +246,7 @@ const fetchAllRSSNews = async (): Promise<News[]> => {
 // 获取新闻列表（带缓存）
 export const getNews = async (params?: {
   category?: string
+  source?: string // 按RSS源名称筛选
   readStatus?: string // 'all' | 'unread' | 'read'
   page?: number
   pageSize?: number
@@ -267,22 +269,38 @@ export const getNews = async (params?: {
       }
     })
   } else {
-    // 获取新数据并更新缓存
+    // 缓存已过期，尝试获取新数据
     try {
       const allNews = await fetchAllRSSNews()
-      newsCache = {
-        data: allNews,
-        fetchedAt: now,
+
+      // 只有成功获取到新闻数据时才更新缓存和时间戳
+      if (allNews.length > 0) {
+        newsCache = {
+          data: allNews,
+          fetchedAt: now,
+        }
+        // 保存到 localStorage
+        saveCacheToStorage(newsCache)
+        console.log(
+          `✅ 新闻缓存已更新，获取到 ${allNews.length} 条新闻，有效期 ${cacheDuration / 1000 / 60} 分钟`,
+        )
+      } else {
+        console.warn('⚠️ 获取新闻返回空数据，不更新缓存')
+        // 如果有旧缓存，继续使用旧缓存（不更新fetchedAt，下次仍会尝试重新获取）
+        if (!newsCache) {
+          console.error('❌ 没有可用的缓存数据')
+          return { data: [], total: 0 }
+        }
+        console.log(`📦 使用旧缓存数据（共 ${newsCache.data.length} 条新闻）`)
       }
-      // 保存到 localStorage
-      saveCacheToStorage(newsCache)
-      console.log(`✅ 新闻缓存已更新，有效期 ${cacheDuration / 1000 / 60} 分钟`)
     } catch (error) {
-      console.error('获取RSS新闻失败:', error)
-      // 如果有旧缓存，继续使用
+      console.error('❌ 获取RSS新闻失败:', error)
+      // 获取失败时，不更新缓存和时间戳，下次仍会尝试重新获取
       if (!newsCache) {
+        console.error('❌ 获取失败且没有可用的缓存数据')
         return { data: [], total: 0 }
       }
+      console.log(`📦 使用旧缓存数据（共 ${newsCache.data.length} 条新闻）`)
     }
   }
 
@@ -291,6 +309,11 @@ export const getNews = async (params?: {
   // 按分类筛选
   if (params?.category) {
     filtered = filtered.filter((news) => news.category === params.category)
+  }
+
+  // 按RSS源名称筛选
+  if (params?.source) {
+    filtered = filtered.filter((news) => news.source === params.source)
   }
 
   // 按阅读状态筛选
@@ -325,6 +348,24 @@ export const getNewsCategories = async (): Promise<string[]> => {
   return Array.from(categories)
 }
 
+// 获取分类及其对应的源列表（用于二级分类）
+export const getCategoriesWithSources = (): Record<string, string[]> => {
+  const config = rssConfig as RSSConfig
+  const categoriesMap: Record<string, string[]> = {}
+
+  config.sources
+    .filter((source) => source.enabled)
+    .forEach((source) => {
+      const category = source.category
+      if (!categoriesMap[category]) {
+        categoriesMap[category] = []
+      }
+      categoriesMap[category]!.push(source.name)
+    })
+
+  return categoriesMap
+}
+
 // 获取RSS源配置
 export const getRSSSources = (): RSSConfig => {
   return rssConfig as RSSConfig
@@ -332,15 +373,33 @@ export const getRSSSources = (): RSSConfig => {
 
 // 手动刷新新闻缓存
 export const refreshNews = async (): Promise<void> => {
-  console.log('手动刷新新闻...')
-  const allNews = await fetchAllRSSNews()
-  newsCache = {
-    data: allNews,
-    fetchedAt: Date.now(),
+  console.log('🔄 手动刷新新闻...')
+  try {
+    const allNews = await fetchAllRSSNews()
+
+    // 只有成功获取到新闻数据时才更新缓存和时间戳
+    if (allNews.length > 0) {
+      newsCache = {
+        data: allNews,
+        fetchedAt: Date.now(),
+      }
+      // 保存到 localStorage
+      saveCacheToStorage(newsCache)
+      console.log(`✅ 新闻缓存已刷新并保存，获取到 ${allNews.length} 条新闻`)
+    } else {
+      // 获取失败时不更新缓存，保留旧缓存数据和时间戳
+      console.warn('⚠️ 手动刷新返回空数据，不更新缓存')
+      const errorMsg = newsCache
+        ? `保留旧缓存（共 ${newsCache.data.length} 条新闻）`
+        : '且没有可用的缓存数据'
+      console.log(errorMsg)
+      throw new Error('获取新闻数据为空')
+    }
+  } catch (error) {
+    console.error('❌ 手动刷新新闻失败:', error)
+    // 获取失败时不更新缓存和时间戳，让调用方知道刷新失败
+    throw error
   }
-  // 保存到 localStorage
-  saveCacheToStorage(newsCache)
-  console.log('✅ 新闻缓存已刷新并保存')
 }
 
 // 清除新闻缓存

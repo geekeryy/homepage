@@ -11,24 +11,19 @@
       "description": "精通Golang并深入理解过Golang源码，擅长构建高性能后端服务和微服务架构"
     },
     {
-      "name": "Vue.js",
+      "name": "Mysql",
       "level": 88,
-      "description": "熟练掌握Vue.js 3.x生态系统，包括Composition API、Pinia状态管理和Vue Router"
+      "description": "熟练掌握Mysql数据库设计和优化，擅长复杂查询和索引优化"
     },
     {
-      "name": "TypeScript",
+      "name": "Redis",
       "level": 92,
-      "description": "深入理解TypeScript类型系统，能够设计复杂的类型定义和泛型系统"
+      "description": "精通Redis缓存策略和数据结构，了解持久化、集群和高可用方案"
     },
     {
-      "name": "Node.js",
+      "name": "Docker",
       "level": 85,
       "description": "熟练使用Node.js构建后端服务，了解事件循环和异步编程模型"
-    },
-    {
-      "name": "React",
-      "level": 82,
-      "description": "掌握React Hooks和现代React开发模式，有丰富的组件设计经验"
     },
     {
       "name": "Docker",
@@ -41,26 +36,6 @@
       "description": "熟悉K8s集群管理和部署，了解Pod、Service、Deployment等核心概念"
     },
     {
-      "name": "PostgreSQL",
-      "level": 88,
-      "description": "深入理解PostgreSQL数据库设计和性能优化，擅长复杂查询和索引优化"
-    },
-    {
-      "name": "Redis",
-      "level": 85,
-      "description": "精通Redis缓存策略和数据结构，了解持久化、集群和高可用方案"
-    },
-    {
-      "name": "MongoDB",
-      "level": 80,
-      "description": "熟练使用MongoDB进行文档存储，了解聚合管道和索引优化"
-    },
-    {
-      "name": "GraphQL",
-      "level": 78,
-      "description": "掌握GraphQL查询语言和Schema设计，有API网关开发经验"
-    },
-    {
       "name": "gRPC",
       "level": 82,
       "description": "熟悉gRPC框架和Protocol Buffers，擅长构建高性能RPC服务"
@@ -71,9 +46,9 @@
       "description": "深入理解微服务架构设计模式，有分布式系统开发和治理经验"
     },
     {
-      "name": "AWS",
+      "name": "GCP",
       "level": 75,
-      "description": "熟悉AWS云服务，包括EC2、S3、Lambda等核心服务的使用"
+      "description": "熟悉GCP云服务，包括GKE、Firebase、Cloud Storage等核心服务的使用"
     },
     {
       "name": "CI/CD",
@@ -91,19 +66,24 @@
       "description": "深入理解Linux系统管理和Shell脚本编程，熟悉系统调优"
     },
     {
-      "name": "Python",
-      "level": 72,
-      "description": "掌握Python编程和常用框架，用于数据处理和自动化脚本"
+      "name": "Shell",
+      "level": 60,
+      "description": "熟练使用Shell脚本进行系统管理、自动化运维和脚本开发"
+    },
+    {
+      "name":"AI",
+      "level": 30,
+      "description": "了解AI相关技术和应用，了解AI模型和算法，了解AI在开发中的应用"
+    },
+    {
+      "name": "Vue.js",
+      "level": 30,
+      "description": "熟悉Vue.js框架和生态系统，了解Vue 3.x的新特性"
     },
     {
       "name": "Nginx",
       "level": 80,
       "description": "熟练配置Nginx作为Web服务器和反向代理，了解性能优化"
-    },
-    {
-      "name": "WebSocket",
-      "level": 78,
-      "description": "熟悉WebSocket协议和实时通信实现，有即时消息系统开发经验"
     }
   ],
   "education": "计算机科学本科",
@@ -153,33 +133,23 @@
   },
   "exploring": [
     {
-      "id": "1",
-      "name": "Rust",
-      "icon": "🦀",
-      "progress": 35,
-      "status": "exploring",
-      "description": "探索系统级编程的新范式，学习所有权和生命周期机制",
-      "startDate": "2024-10",
-      "reason": "追求更高的性能和内存安全"
-    },
-    {
       "id": "2",
       "name": "WebAssembly",
       "icon": "🚀",
-      "progress": 45,
+      "progress": 55,
       "status": "researching",
       "description": "研究浏览器中的高性能计算，探索与Golang的结合",
-      "startDate": "2024-09",
+      "startDate": "2025-09",
       "reason": "让Web应用达到原生性能"
     },
     {
       "id": "3",
       "name": "eBPF",
       "icon": "🔍",
-      "progress": 60,
+      "progress": 10,
       "status": "practicing",
       "description": "深入学习Linux内核可观测性技术，用于系统监控和安全",
-      "startDate": "2024-08",
+      "startDate": "2025-08",
       "reason": "提升系统级问题排查能力"
     }
   ]
