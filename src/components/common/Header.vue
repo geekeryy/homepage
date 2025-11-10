@@ -26,6 +26,33 @@
           </el-menu>
         </nav>
 
+        <!-- 用户区域 -->
+        <div class="user-area">
+          <!-- 未登录 -->
+          <el-button v-if="!isAuthenticated" type="primary" @click="goToAuth">
+            登录 / 注册
+          </el-button>
+          <!-- 已登录 -->
+          <el-dropdown v-else @command="handleUserCommand">
+            <div class="user-info">
+              <el-avatar :src="userInfo?.avatar" :icon="UserFilled" />
+              <span class="username">{{ userInfo?.nickname || '用户' }}</span>
+            </div>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="profile">
+                  <el-icon><User /></el-icon>
+                  个人中心
+                </el-dropdown-item>
+                <el-dropdown-item command="logout" divided>
+                  <el-icon><SwitchButton /></el-icon>
+                  退出登录
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+        </div>
+
         <!-- 移动端菜单按钮 -->
         <div class="mobile-menu-btn">
           <el-button :icon="Menu" @click="drawerVisible = true" />
@@ -62,8 +89,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import {
   Menu,
   HomeFilled,
@@ -71,17 +99,26 @@ import {
   Document,
   FolderOpened,
   User,
-  Message,
+  UserFilled,
+  SwitchButton,
 } from '@element-plus/icons-vue'
+import tokenStorage from '@/services/tokenStorage'
+import userService, { type UserInfo } from '@/services/user'
 
 const router = useRouter()
 const route = useRoute()
 const drawerVisible = ref(false)
+const isAuthenticated = ref(false)
+const userInfo = ref<UserInfo | null>(null)
 
 const activeMenu = computed(() => route.path)
 
 const goHome = () => {
   router.push('/')
+}
+
+const goToAuth = () => {
+  router.push('/auth')
 }
 
 const handleMenuSelect = (index: string) => {
@@ -92,6 +129,40 @@ const handleMenuSelect = (index: string) => {
   router.push(index)
   drawerVisible.value = false
 }
+
+const handleUserCommand = (command: string) => {
+  if (command === 'logout') {
+    handleLogout()
+  } else if (command === 'profile') {
+    ElMessage.info('个人中心功能开发中')
+  }
+}
+
+const handleLogout = () => {
+  tokenStorage.clearAll()
+  isAuthenticated.value = false
+  userInfo.value = null
+  ElMessage.success('已退出登录')
+  router.push('/')
+}
+
+const checkAuthStatus = async () => {
+  isAuthenticated.value = tokenStorage.isAuthenticated()
+  if (isAuthenticated.value) {
+    try {
+      userInfo.value = await userService.getMemberInfo()
+    } catch (error) {
+      console.error('获取用户信息失败:', error)
+      // 如果获取用户信息失败，清除认证状态
+      tokenStorage.clearAll()
+      isAuthenticated.value = false
+    }
+  }
+}
+
+onMounted(() => {
+  checkAuthStatus()
+})
 </script>
 
 <style scoped>
@@ -152,6 +223,30 @@ const handleMenuSelect = (index: string) => {
   display: none;
 }
 
+.user-area {
+  margin-left: 20px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 5px 12px;
+  border-radius: 20px;
+  transition: background-color 0.3s;
+}
+
+.user-info:hover {
+  background-color: #f5f7fa;
+}
+
+.username {
+  font-size: 14px;
+  font-weight: 500;
+  color: #303133;
+}
+
 /* 移除 Element Plus Menu 的边框 */
 :deep(.el-menu--horizontal) {
   border-bottom: none;
@@ -169,6 +264,14 @@ const handleMenuSelect = (index: string) => {
 
   .mobile-menu-btn {
     display: block;
+  }
+
+  .user-area {
+    margin-left: 12px;
+  }
+
+  .username {
+    display: none;
   }
 }
 </style>

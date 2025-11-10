@@ -39,6 +39,18 @@ const routes: RouteRecordRaw[] = [
       },
     ],
   },
+  // 认证页面（不使用 MainLayout）
+  {
+    path: '/auth',
+    name: 'auth',
+    component: () => import('@/views/AuthView.vue'),
+  },
+  // OAuth 回调页面
+  {
+    path: '/auth/callback',
+    name: 'auth-callback',
+    component: () => import('@/views/AuthCallbackView.vue'),
+  },
 ]
 
 const router = createRouter({

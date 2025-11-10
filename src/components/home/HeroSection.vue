@@ -1,23 +1,15 @@
 <template>
   <div class="hero-section">
     <div class="hero-content">
-      <div
-        class="hero-logo"
-        :class="{ 'cursor-infected': cursorInfected }"
-        @mouseenter="startVirusEffect"
-        @mouseleave="stopVirusEffect"
-        @click="triggerVirusExplosion"
-      >
-        <div
-          class="logo-container"
-          :class="{
-            'virus-active': virusActive,
-            'virus-level-2': virusLevel >= 2,
-            'virus-level-3': virusLevel >= 3,
-            'virus-exploded': virusExploded,
-            'virus-degrading': isDegrading,
-          }"
-        >
+      <div class="hero-logo" :class="{ 'cursor-infected': cursorInfected }" @mouseenter="startVirusEffect"
+        @mouseleave="stopVirusEffect" @click="triggerVirusExplosion">
+        <div class="logo-container" :class="{
+          'virus-active': virusActive,
+          'virus-level-2': virusLevel >= 2,
+          'virus-level-3': virusLevel >= 3,
+          'virus-exploded': virusExploded,
+          'virus-degrading': isDegrading,
+        }">
           <img src="/images/logo.svg" alt="Logo" class="logo-image" />
           <!-- 病毒特效层 -->
           <div v-if="virusActive" class="virus-effects">
@@ -34,52 +26,33 @@
             </div>
             <!-- 病毒代码雨 -->
             <div class="virus-code">
-              <span
-                v-for="i in getCodeCount()"
-                :key="`code-${i}-${codeKey}`"
-                class="code-char"
-                :style="getCodeStyle(i)"
-              >
+              <span v-for="i in getCodeCount()" :key="`code-${i}-${codeKey}`" class="code-char"
+                :style="getCodeStyle(i)">
                 {{ getRandomChar() }}
               </span>
             </div>
             <!-- 警告文字 -->
-            <div
-              class="virus-warning"
-              :class="[`warning-level-${virusLevel}`, { 'warning-degrading': isDegrading }]"
-            >
+            <div class="virus-warning" :class="[`warning-level-${virusLevel}`, { 'warning-degrading': isDegrading }]">
               {{ getWarningText() }}
             </div>
             <!-- 额外的警告圆环（等级2+） -->
-            <div
-              v-if="virusLevel >= 2"
-              class="danger-ring"
-              :class="{ 'ring-degrading': isDegrading }"
-            ></div>
-            <div
-              v-if="virusLevel >= 3"
-              class="danger-ring danger-ring-2"
-              :class="{ 'ring-degrading': isDegrading }"
-            ></div>
+            <div v-if="virusLevel >= 2" class="danger-ring" :class="{ 'ring-degrading': isDegrading }"></div>
+            <div v-if="virusLevel >= 3" class="danger-ring danger-ring-2" :class="{ 'ring-degrading': isDegrading }">
+            </div>
           </div>
           <!-- 爆炸效果 -->
           <div v-if="virusExploded" class="explosion-effects">
-            <div
-              v-for="i in 30"
-              :key="`explosion-${i}`"
-              class="explosion-particle"
-              :style="getExplosionStyle(i)"
-            ></div>
+            <div v-for="i in 30" :key="`explosion-${i}`" class="explosion-particle" :style="getExplosionStyle(i)"></div>
             <div class="system-crash">SYSTEM CRASHED</div>
           </div>
         </div>
       </div>
       <h1 class="hero-title" :class="{ 'title-corrupted': corruptedTitle }">
-        <span v-if="!corruptedTitle">欢迎来到我的个人主页</span>
+        <span v-if="!corruptedTitle">{{ dailySentence || defaultTitle }}</span>
         <span v-else class="corrupted-text">{{ corruptedTitle }}</span>
       </h1>
       <p class="hero-subtitle" :class="{ 'subtitle-corrupted': corruptedSubtitle }">
-        <span v-if="!corruptedSubtitle">全栈开发工程师 | 技术爱好者 | 开源贡献者</span>
+        <span v-if="!corruptedSubtitle">软件开发工程师&nbsp;|&nbsp;技术爱好者&nbsp;|&nbsp;开源贡献者</span>
         <span v-else class="corrupted-text">{{ corruptedSubtitle }}</span>
       </p>
       <div class="hero-tags">
@@ -91,7 +64,9 @@
       <div class="hero-actions">
         <el-button type="primary" size="large" @click="explore" round>
           探索更多
-          <el-icon class="el-icon--right"><ArrowRight /></el-icon>
+          <el-icon class="el-icon--right">
+            <ArrowRight />
+          </el-icon>
         </el-button>
       </div>
     </div>
@@ -109,7 +84,8 @@
 <script setup lang="ts">
 import { ArrowRight } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
-import { ref, onBeforeUnmount } from 'vue'
+import { ref, onBeforeUnmount, onMounted } from 'vue'
+import apiClient from '@/services/api'
 
 const router = useRouter()
 const virusActive = ref(false)
@@ -120,6 +96,8 @@ const isDegrading = ref(false) // 衰减状态
 const codeKey = ref(0) // 用于强制更新代码雨
 const corruptedTitle = ref('') // 被破坏的标题文字
 const corruptedSubtitle = ref('') // 被破坏的副标题文字
+const dailySentence = ref('') // 每日句子
+const defaultTitle = '欢迎来到我的个人主页' // 默认标题
 let virusTimer: number | null = null
 let explosionTimer: number | null = null
 let cursorTimer: number | null = null
@@ -413,6 +391,35 @@ const getExplosionStyle = (index: number) => {
   }
 }
 
+// 获取每日句子
+const fetchDailySentence = async () => {
+  try {
+    console.log('开始请求每日句子...')
+    const response = await apiClient.get('/api/v1/gateway/ai/daily-sentence', {
+      params: {
+        lang: 'zh', // 语言类型：中文
+        use: '个人主页展示', // 用途说明
+      },
+    })
+    console.log('API 响应数据:', response)
+
+    // 响应拦截器已返回 response.data，所以这里 response 就是实际的响应数据
+    // 根据 swagger 文档，返回格式为 { sentence: "..." }
+    if (response && typeof response === 'object' && 'data' in response) {
+      dailySentence.value = String(response.data.sentence)
+    } 
+  } catch (error) {
+    console.error('获取每日句子失败:', error)
+    // 失败时使用默认标题
+    dailySentence.value = ''
+  }
+}
+
+// 组件挂载时获取每日句子
+onMounted(() => {
+  fetchDailySentence()
+})
+
 // 清理定时器
 onBeforeUnmount(() => {
   if (virusTimer) clearTimeout(virusTimer)
@@ -494,13 +501,16 @@ onBeforeUnmount(() => {
 }
 
 @keyframes float {
+
   0%,
   100% {
     transform: translate(0, 0) scale(1);
   }
+
   33% {
     transform: translate(50px, -50px) scale(1.1);
   }
+
   66% {
     transform: translate(-30px, 30px) scale(0.9);
   }
@@ -523,8 +533,7 @@ onBeforeUnmount(() => {
 /* 感染状态的鼠标样式 */
 .hero-logo.cursor-infected {
   cursor:
-    url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><text y="24" font-size="24" fill="red">☠</text></svg>')
-      16 16,
+    url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><text y="24" font-size="24" fill="red">☠</text></svg>') 16 16,
     crosshair;
 }
 
@@ -550,8 +559,7 @@ onBeforeUnmount(() => {
 }
 
 .logo-container.virus-active .logo-image {
-  filter: drop-shadow(0 0 20px rgba(255, 0, 0, 0.8)) drop-shadow(0 0 40px rgba(255, 0, 0, 0.6))
-    hue-rotate(180deg) saturate(2);
+  filter: drop-shadow(0 0 20px rgba(255, 0, 0, 0.8)) drop-shadow(0 0 40px rgba(255, 0, 0, 0.6)) hue-rotate(180deg) saturate(2);
 }
 
 /* 病毒等级2 - 更剧烈的效果 */
@@ -560,8 +568,7 @@ onBeforeUnmount(() => {
 }
 
 .logo-container.virus-level-2 .logo-image {
-  filter: drop-shadow(0 0 30px rgba(255, 0, 0, 1)) drop-shadow(0 0 60px rgba(255, 0, 0, 0.8))
-    hue-rotate(180deg) saturate(3) contrast(1.2);
+  filter: drop-shadow(0 0 30px rgba(255, 0, 0, 1)) drop-shadow(0 0 60px rgba(255, 0, 0, 0.8)) hue-rotate(180deg) saturate(3) contrast(1.2);
 }
 
 /* 病毒等级3 - 极度剧烈 */
@@ -571,8 +578,7 @@ onBeforeUnmount(() => {
 }
 
 .logo-container.virus-level-3 .logo-image {
-  filter: drop-shadow(0 0 40px rgba(255, 0, 0, 1)) drop-shadow(0 0 80px rgba(255, 0, 0, 1))
-    hue-rotate(180deg) saturate(4) contrast(1.5) brightness(1.2);
+  filter: drop-shadow(0 0 40px rgba(255, 0, 0, 1)) drop-shadow(0 0 80px rgba(255, 0, 0, 1)) hue-rotate(180deg) saturate(4) contrast(1.5) brightness(1.2);
 }
 
 /* 爆炸状态 */
@@ -806,34 +812,44 @@ onBeforeUnmount(() => {
 
 /* 动画定义 */
 @keyframes virus-shake {
+
   0%,
   100% {
     transform: translate(0, 0) rotate(0deg);
   }
+
   10% {
     transform: translate(-2px, -2px) rotate(-1deg);
   }
+
   20% {
     transform: translate(2px, 2px) rotate(1deg);
   }
+
   30% {
     transform: translate(-2px, 2px) rotate(-1deg);
   }
+
   40% {
     transform: translate(2px, -2px) rotate(1deg);
   }
+
   50% {
     transform: translate(-2px, -2px) rotate(-1deg);
   }
+
   60% {
     transform: translate(2px, 2px) rotate(1deg);
   }
+
   70% {
     transform: translate(-2px, 2px) rotate(-1deg);
   }
+
   80% {
     transform: translate(2px, -2px) rotate(1deg);
   }
+
   90% {
     transform: translate(-2px, -2px) rotate(-1deg);
   }
@@ -843,16 +859,19 @@ onBeforeUnmount(() => {
   0% {
     top: 0;
   }
+
   100% {
     top: 100%;
   }
 }
 
 @keyframes flash {
+
   0%,
   100% {
     opacity: 0;
   }
+
   50% {
     opacity: 1;
   }
@@ -862,18 +881,23 @@ onBeforeUnmount(() => {
   0% {
     transform: translate(0);
   }
+
   20% {
     transform: translate(-3px, 3px);
   }
+
   40% {
     transform: translate(-3px, -3px);
   }
+
   60% {
     transform: translate(3px, 3px);
   }
+
   80% {
     transform: translate(3px, -3px);
   }
+
   100% {
     transform: translate(0);
   }
@@ -883,18 +907,23 @@ onBeforeUnmount(() => {
   0% {
     transform: translate(0);
   }
+
   20% {
     transform: translate(2px, -2px);
   }
+
   40% {
     transform: translate(2px, 2px);
   }
+
   60% {
     transform: translate(-2px, -2px);
   }
+
   80% {
     transform: translate(-2px, 2px);
   }
+
   100% {
     transform: translate(0);
   }
@@ -905,12 +934,15 @@ onBeforeUnmount(() => {
     top: -20px;
     opacity: 0;
   }
+
   10% {
     opacity: 0.8;
   }
+
   90% {
     opacity: 0.8;
   }
+
   100% {
     top: 140px;
     opacity: 0;
@@ -918,10 +950,12 @@ onBeforeUnmount(() => {
 }
 
 @keyframes blink {
+
   0%,
   100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.3;
   }
@@ -929,34 +963,44 @@ onBeforeUnmount(() => {
 
 /* 更剧烈的震动动画 - 等级2 */
 @keyframes virus-shake-2 {
+
   0%,
   100% {
     transform: translate(0, 0) rotate(0deg);
   }
+
   10% {
     transform: translate(-4px, -4px) rotate(-2deg);
   }
+
   20% {
     transform: translate(4px, 4px) rotate(2deg);
   }
+
   30% {
     transform: translate(-4px, 4px) rotate(-2deg);
   }
+
   40% {
     transform: translate(4px, -4px) rotate(2deg);
   }
+
   50% {
     transform: translate(-4px, -4px) rotate(-2deg);
   }
+
   60% {
     transform: translate(4px, 4px) rotate(2deg);
   }
+
   70% {
     transform: translate(-4px, 4px) rotate(-2deg);
   }
+
   80% {
     transform: translate(4px, -4px) rotate(2deg);
   }
+
   90% {
     transform: translate(-4px, -4px) rotate(-2deg);
   }
@@ -964,34 +1008,44 @@ onBeforeUnmount(() => {
 
 /* 极度剧烈的震动 - 等级3 */
 @keyframes virus-shake-3 {
+
   0%,
   100% {
     transform: translate(0, 0) rotate(0deg) scale(1);
   }
+
   10% {
     transform: translate(-6px, -6px) rotate(-3deg) scale(1.02);
   }
+
   20% {
     transform: translate(6px, 6px) rotate(3deg) scale(0.98);
   }
+
   30% {
     transform: translate(-6px, 6px) rotate(-3deg) scale(1.02);
   }
+
   40% {
     transform: translate(6px, -6px) rotate(3deg) scale(0.98);
   }
+
   50% {
     transform: translate(-6px, -6px) rotate(-3deg) scale(1.02);
   }
+
   60% {
     transform: translate(6px, 6px) rotate(3deg) scale(0.98);
   }
+
   70% {
     transform: translate(-6px, 6px) rotate(-3deg) scale(1.02);
   }
+
   80% {
     transform: translate(6px, -6px) rotate(3deg) scale(0.98);
   }
+
   90% {
     transform: translate(-6px, -6px) rotate(-3deg) scale(1.02);
   }
@@ -1002,15 +1056,19 @@ onBeforeUnmount(() => {
   0% {
     transform: translate(0, 0) rotate(0deg) scale(1);
   }
+
   25% {
     transform: translate(-8px, 8px) rotate(-5deg) scale(1.05);
   }
+
   50% {
     transform: translate(8px, -8px) rotate(5deg) scale(0.95);
   }
+
   75% {
     transform: translate(-8px, -8px) rotate(-5deg) scale(1.05);
   }
+
   100% {
     transform: translate(8px, 8px) rotate(5deg) scale(0.95);
   }
@@ -1018,10 +1076,12 @@ onBeforeUnmount(() => {
 
 /* 警告文字脉冲 */
 @keyframes warning-pulse {
+
   0%,
   100% {
     transform: translateX(-50%) scale(1);
   }
+
   50% {
     transform: translateX(-50%) scale(1.1);
   }
@@ -1029,11 +1089,13 @@ onBeforeUnmount(() => {
 
 /* 衰减状态的脉冲动画 - 更平缓 */
 @keyframes degrade-pulse {
+
   0%,
   100% {
     transform: translateX(-50%) scale(1);
     opacity: 0.8;
   }
+
   50% {
     transform: translateX(-50%) scale(1.05);
     opacity: 1;
@@ -1049,6 +1111,7 @@ onBeforeUnmount(() => {
     opacity: 1;
     border-width: 3px;
   }
+
   100% {
     width: 220px;
     height: 220px;
@@ -1067,6 +1130,7 @@ onBeforeUnmount(() => {
     opacity: 0.8;
     border-width: 3px;
   }
+
   100% {
     width: 200px;
     height: 200px;
@@ -1082,12 +1146,10 @@ onBeforeUnmount(() => {
     transform: translate(0, 0) scale(1);
     opacity: 1;
   }
+
   100% {
-    transform: translate(
-        calc(cos(var(--angle)) * var(--distance)),
-        calc(sin(var(--angle)) * var(--distance))
-      )
-      scale(0);
+    transform: translate(calc(cos(var(--angle)) * var(--distance)),
+        calc(sin(var(--angle)) * var(--distance))) scale(0);
     opacity: 0;
   }
 }
@@ -1098,9 +1160,11 @@ onBeforeUnmount(() => {
     transform: translate(-50%, -50%) scale(0);
     opacity: 0;
   }
+
   50% {
     transform: translate(-50%, -50%) scale(1.2);
   }
+
   100% {
     transform: translate(-50%, -50%) scale(1);
     opacity: 1;
@@ -1112,18 +1176,23 @@ onBeforeUnmount(() => {
   0% {
     transform: translate(0);
   }
+
   20% {
     transform: translate(-2px, 2px);
   }
+
   40% {
     transform: translate(-2px, -2px);
   }
+
   60% {
     transform: translate(2px, 2px);
   }
+
   80% {
     transform: translate(2px, -2px);
   }
+
   100% {
     transform: translate(0);
   }
@@ -1131,19 +1200,23 @@ onBeforeUnmount(() => {
 
 /* 文字闪烁腐化效果 */
 @keyframes corrupt-flicker {
+
   0%,
   100% {
     opacity: 1;
     filter: brightness(1);
   }
+
   25% {
     opacity: 0.8;
     filter: brightness(1.2);
   }
+
   50% {
     opacity: 0.9;
     filter: brightness(0.8);
   }
+
   75% {
     opacity: 1;
     filter: brightness(1.1);
@@ -1151,10 +1224,12 @@ onBeforeUnmount(() => {
 }
 
 @keyframes pulse {
+
   0%,
   100% {
     transform: scale(1);
   }
+
   50% {
     transform: scale(1.05);
   }
@@ -1165,6 +1240,7 @@ onBeforeUnmount(() => {
     opacity: 0;
     transform: translateY(-30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1172,7 +1248,7 @@ onBeforeUnmount(() => {
 }
 
 .hero-title {
-  font-size: 52px;
+  font-size: 32px;
   font-weight: 800;
   color: #303133;
   margin-bottom: 20px;
@@ -1294,6 +1370,7 @@ onBeforeUnmount(() => {
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
