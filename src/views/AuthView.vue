@@ -17,19 +17,30 @@
               @blur="handleEmailBlur" />
           </el-form-item>
 
-          <!-- 验证码输入 -->
-          <el-form-item prop="code">
-            <div class="code-input-wrapper">
-              <el-input v-model="formData.code" placeholder="请输入验证码" size="large" prefix-icon="Lock" clearable
-                maxlength="6" class="code-input" />
-              <el-button :disabled="countdown > 0 || !formData.email" :loading="sendingCode" size="large"
-                class="send-code-btn" @click="handleSendCode">
-                {{ countdown > 0 ? `${countdown}秒` : '发送验证码' }}
-              </el-button>
-            </div>
-          </el-form-item>
+          <!-- 验证码登录模式 -->
+          <template v-if="!isPasswordLogin || !isLogin">
+            <!-- 验证码输入 -->
+            <el-form-item prop="code">
+              <div class="code-input-wrapper">
+                <el-input v-model="formData.code" placeholder="请输入验证码" size="large" prefix-icon="Lock" clearable
+                  maxlength="6" class="code-input" />
+                <el-button :disabled="countdown > 0 || !formData.email" :loading="sendingCode" size="large"
+                  class="send-code-btn" @click="handleSendCode">
+                  {{ countdown > 0 ? `${countdown}秒` : '发送验证码' }}
+                </el-button>
+              </div>
+            </el-form-item>
+          </template>
 
-          <!-- 密码输入（必填） -->
+          <!-- 密码登录模式 -->
+          <template v-if="isPasswordLogin && isLogin">
+            <el-form-item prop="loginPassword">
+              <el-input v-model="formData.loginPassword" type="password" placeholder="请输入密码" size="large"
+                prefix-icon="Lock" show-password clearable />
+            </el-form-item>
+          </template>
+
+          <!-- 注册时的密码输入（必填） -->
           <el-form-item v-if="!isLogin" prop="password">
             <el-input v-model="formData.password" type="password" placeholder="设置密码（6-20位）" size="large"
               prefix-icon="Lock" show-password clearable maxlength="20" />
@@ -47,6 +58,13 @@
               {{ isLogin ? '登录' : '注册' }}
             </el-button>
           </el-form-item>
+
+          <!-- 登录方式切换（仅登录模式显示） -->
+          <div v-if="isLogin" class="login-mode-switch">
+            <el-button type="text" @click="toggleLoginMode">
+              {{ isPasswordLogin ? '使用验证码登录' : '使用密码登录' }}
+            </el-button>
+          </div>
 
           <!-- 分隔线 -->
           <el-divider>
@@ -83,11 +101,13 @@ import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import authService, { IdentityType } from '@/services/auth'
 import tokenStorage from '@/services/tokenStorage'
+import userService from '@/services/user'
 
 const router = useRouter()
 const route = useRoute()
 const formRef = ref<FormInstance>()
 const isLogin = ref(true) // true: 登录模式, false: 注册模式
+const isPasswordLogin = ref(true) // true: 密码登录, false: 验证码登录（默认密码登录）
 const countdown = ref(0) // 验证码倒计时
 const sendingCode = ref(false) // 是否正在发送验证码
 const submitting = ref(false) // 是否正在提交表单
@@ -98,6 +118,7 @@ const formData = reactive({
   code: '',
   password: '',
   confirmPassword: '',
+  loginPassword: '', // 密码登录时使用
 })
 
 // 邮箱验证规则（增强版）
@@ -165,12 +186,26 @@ const validateConfirmPassword = (rule: any, value: string, callback: any) => {
   }
 }
 
+// 登录密码验证规则
+const validateLoginPassword = (rule: any, value: string, callback: any) => {
+  if (isLogin.value && isPasswordLogin.value) {
+    if (!value) {
+      callback(new Error('请输入密码'))
+    } else {
+      callback()
+    }
+  } else {
+    callback()
+  }
+}
+
 // 表单验证规则
 const rules = reactive<FormRules>({
   email: [{ validator: validateEmail, trigger: 'blur' }],
   code: [{ validator: validateCode, trigger: 'blur' }],
   password: [{ validator: validatePassword, trigger: 'blur' }],
   confirmPassword: [{ validator: validateConfirmPassword, trigger: 'blur' }],
+  loginPassword: [{ validator: validateLoginPassword, trigger: 'blur' }],
 })
 
 // 邮箱失焦时验证
@@ -225,11 +260,23 @@ const handleSubmit = async () => {
     return
   }
 
-  if (!formData.code.trim()) {
-    ElMessage.warning('请输入验证码')
-    return
+  // 验证码登录模式或注册时检查验证码
+  if (!isPasswordLogin.value || !isLogin.value) {
+    if (!formData.code.trim()) {
+      ElMessage.warning('请输入验证码')
+      return
+    }
   }
 
+  // 密码登录模式检查密码
+  if (isLogin.value && isPasswordLogin.value) {
+    if (!formData.loginPassword) {
+      ElMessage.warning('请输入密码')
+      return
+    }
+  }
+
+  // 注册时检查密码
   if (!isLogin.value && !formData.password) {
     ElMessage.warning('请设置密码')
     return
@@ -246,19 +293,40 @@ const handleSubmit = async () => {
 
       if (isLogin.value) {
         // 登录
-        const response = await authService.loginWithEmailCode(
-          formData.email.trim(),
-          formData.code.trim()
-        )
+        let response: any
+        if (isPasswordLogin.value) {
+          // 密码登录
+          response = await authService.loginWithAccountPassword(
+            formData.email.trim(),
+            formData.loginPassword
+          )
+        } else {
+          // 验证码登录
+          response = await authService.loginWithEmailCode(
+            formData.email.trim(),
+            formData.code.trim()
+          )
+        }
 
         // 保存 token
         tokenStorage.saveLoginResponse(response.token, response.refresh_token)
 
+        // 获取用户信息
+        try {
+          const userInfo = await userService.getMemberInfo()
+          // 保存用户信息到本地存储
+          tokenStorage.setUserInfo(userInfo)
+          console.log('用户信息获取成功:', userInfo)
+        } catch (error) {
+          console.error('获取用户信息失败:', error)
+          // 即使获取用户信息失败也继续登录流程
+        }
+
         ElMessage.success('登录成功')
 
-        // 跳转到首页或回到之前的页面
-        const redirect = route.query.redirect as string
-        router.push(redirect || '/')
+        // 获取重定向路径
+        const redirect = (route.query.redirect as string) || '/'
+        router.push(redirect)
       } else {
         // 注册（必须提供密码）
         await authService.registerWithEmailCodeAndPassword(
@@ -289,25 +357,56 @@ const handleSubmit = async () => {
 // GitHub 登录
 const handleGithubLogin = () => {
   // GitHub OAuth 授权流程：
-  // 1. 跳转到后端提供的 GitHub 授权端点
-  // 2. 后端重定向到 GitHub OAuth 页面
-  // 3. 用户授权后，GitHub 回调到 /auth/callback?code=xxx
-  // 4. 回调页面使用 code 作为 credential 调用登录接口
+  // 1. 跳转到 GitHub OAuth 授权页面，携带 client_id 和 redirect_uri
+  // 2. 用户授权后，GitHub 回调到 redirect_uri（当前域名 + /auth/callback）
+  // 3. 回调页面获取 code 参数，使用 code 作为 credential 调用登录接口
 
-  const githubAuthUrl = "https://github.com/login/oauth/authorize?client_id=Ov23linLjDFt4ur8Jinh"
+  // 从环境变量获取 GitHub Client ID
+  const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID
+  if (!clientId) {
+    ElMessage.error('GitHub OAuth 未配置，请联系管理员')
+    console.error('VITE_GITHUB_CLIENT_ID 环境变量未设置')
+    return
+  }
 
+  // 保存重定向路径到 sessionStorage，以便回调后使用
+  const redirect = (route.query.redirect as string) || '/'
+  sessionStorage.setItem('auth_redirect', redirect)
 
-    // 跳转到后端的 GitHub OAuth 授权端点
-    window.location.href = githubAuthUrl
+  // 动态生成 redirect_uri：当前访问地址 + /auth/callback
+  const redirectUri = `${window.location.origin}/auth/callback`
+  console.log(redirectUri)
+
+  // 构建 GitHub OAuth 授权 URL
+  const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${Date.now()}`
+
+  // 跳转到 GitHub OAuth 授权页面
+  window.location.href = githubAuthUrl
 }
 
 // 切换登录/注册模式
 const toggleMode = () => {
   isLogin.value = !isLogin.value
+  // 切换到注册时，重置为验证码模式
+  if (!isLogin.value) {
+    isPasswordLogin.value = false
+  }
   // 清空表单
   formData.code = ''
   formData.password = ''
   formData.confirmPassword = ''
+  formData.loginPassword = ''
+  formRef.value?.clearValidate()
+}
+
+// 切换登录方式（验证码/密码）
+const toggleLoginMode = () => {
+  isPasswordLogin.value = !isPasswordLogin.value
+  // 清空相关字段
+  formData.code = ''
+  formData.loginPassword = ''
+  // 重置验证码倒计时
+  countdown.value = 0
   formRef.value?.clearValidate()
 }
 </script>
@@ -366,6 +465,7 @@ const toggleMode = () => {
   display: flex;
   gap: 12px;
   width: 100%;
+  align-items: center;
 }
 
 .code-input {
@@ -373,8 +473,11 @@ const toggleMode = () => {
 }
 
 .send-code-btn {
-  min-width: 110px;
+  min-width: 120px;
   white-space: nowrap;
+  height: 40px;
+  flex-shrink: 0;
+  font-size: 14px;
 }
 
 .submit-btn {
@@ -423,6 +526,17 @@ const toggleMode = () => {
   color: #606266;
 }
 
+.login-mode-switch {
+  text-align: center;
+  margin-top: -8px;
+  margin-bottom: 16px;
+}
+
+.login-mode-switch .el-button {
+  font-size: 13px;
+  color: #409eff;
+}
+
 /* Element Plus 组件样式覆盖 */
 .auth-form :deep(.el-input__wrapper) {
   padding: 11px 15px;
@@ -461,6 +575,7 @@ const toggleMode = () => {
 
   .send-code-btn {
     width: 100%;
+    min-width: auto;
   }
 }
 </style>

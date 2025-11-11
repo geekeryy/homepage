@@ -1,4 +1,5 @@
 import type { News, RSSConfig } from '@/types'
+import { unwrapApiResponse, type ApiResponse } from './api'
 import rssConfig from '@/data/rss.json'
 import { getCacheDuration, isCacheEnabled } from '@/config/news.config'
 import { generateNewsUniqueId, getReadStates, cleanupExpiredReadStates } from './newsStorage'
@@ -188,9 +189,15 @@ const fetchFromRSSSource = async (
       throw new Error(`HTTP ${response.status}`)
     }
 
-    // 新API返回JSON格式 {content: "..."}
-    const jsonData = await response.json()
-    const xmlText = jsonData.data.content
+    // 新API返回JSON格式，包含包裹结构 {code: 0, msg: "success", data: {content: "..."}}
+    const jsonData = await response.json() as ApiResponse<{ content: string }>
+    
+    // 检查业务状态码
+    if (jsonData.code !== 0) {
+      throw new Error(jsonData.msg || 'API请求失败')
+    }
+    
+    const xmlText = jsonData.data?.content
 
     if (!xmlText) {
       throw new Error('API返回的数据中没有content字段')

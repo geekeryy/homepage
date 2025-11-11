@@ -1,6 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
 import MainLayout from '@/layouts/MainLayout.vue'
+import tokenStorage from '@/services/tokenStorage'
+import { ElMessage } from 'element-plus'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -37,6 +39,12 @@ const routes: RouteRecordRaw[] = [
         name: 'about',
         component: () => import('@/views/AboutView.vue'),
       },
+      {
+        path: 'profile',
+        name: 'profile',
+        component: () => import('@/views/ProfileView.vue'),
+        meta: { requiresAuth: true },
+      },
     ],
   },
   // 认证页面（不使用 MainLayout）
@@ -63,6 +71,26 @@ const router = createRouter({
       return { top: 0 }
     }
   },
+})
+
+// 路由守卫 - 认证检查
+router.beforeEach((to, from, next) => {
+  // 检查路由是否需要认证
+  if (to.meta.requiresAuth) {
+    // 检查是否已登录
+    if (!tokenStorage.isAuthenticated()) {
+      ElMessage.warning('请先登录')
+      // 跳转到登录页，并记录原始目标路由
+      next({
+        path: '/auth',
+        query: { redirect: to.fullPath },
+      })
+    } else {
+      next()
+    }
+  } else {
+    next()
+  }
 })
 
 export default router

@@ -30,10 +30,51 @@ apiClient.interceptors.request.use(
   }
 )
 
+// API 响应包裹结构
+export interface ApiResponse<T = any> {
+  code: number
+  msg: string
+  data: T
+}
+
+/**
+ * 解包 API 响应
+ * 如果响应是包裹结构（有 code 和 data 字段），则检查 code 并返回 data
+ * 如果不是包裹结构，直接返回原始数据
+ */
+export function unwrapApiResponse<T = any>(response: any): T {
+  // 检查是否是包裹结构
+  if (response && typeof response === 'object' && 'code' in response) {
+    const apiResponse = response as ApiResponse<T>
+    
+    // 检查业务状态码
+    if (apiResponse.code !== 0) {
+      const error = new Error(apiResponse.msg || 'API请求失败') as any
+      error.code = apiResponse.code
+      error.businessError = true
+      throw error
+    }
+    
+    return apiResponse.data
+  }
+  
+  // 如果不是包裹结构，直接返回原始数据
+  return response as T
+}
+
 // 响应拦截器
 apiClient.interceptors.response.use(
   (response) => {
-    return response.data
+    try {
+      // 使用统一的解包函数处理响应
+      return unwrapApiResponse(response.data)
+    } catch (error: any) {
+      // 记录业务错误
+      if (error.businessError) {
+        console.error('API 业务错误:', error.message)
+      }
+      return Promise.reject(error)
+    }
   },
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean }
@@ -73,7 +114,7 @@ apiClient.interceptors.response.use(
           throw new Error('No refresh token available')
         }
 
-        // 调用刷新 token 接口
+        // 调用刷新 token 接口（使用原始 axios 避免在刷新过程中再次触发401拦截）
         const response = await axios.post(
           `${apiClient.defaults.baseURL}/api/v1/gateway/auth/member/refresh`,
           { refresh_token: refreshToken },
@@ -84,7 +125,10 @@ apiClient.interceptors.response.use(
           }
         )
 
-        const newToken = response.data.data?.token || response.data.token
+        // 使用统一的解包函数处理响应
+        const tokenData = unwrapApiResponse<{ token: string }>(response.data)
+        const newToken = tokenData?.token
+        
         if (!newToken) {
           throw new Error('Invalid refresh token response')
         }

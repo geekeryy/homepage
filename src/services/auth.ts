@@ -85,12 +85,12 @@ class AuthService {
   }
 
   /**
-   * 邮箱密码登录
+   * 用户密码登录
    */
-  async loginWithEmailPassword(email: string, password: string): Promise<LoginResponse> {
+  async loginWithAccountPassword(username: string, password: string): Promise<LoginResponse> {
     const data: LoginRequest = {
-      identity_type: IdentityType.Email,
-      identifier: email,
+      identity_type: IdentityType.Username,
+      identifier: username,
       credential: password,
     }
     return await apiClient.post('/api/v1/gateway/auth/member/login', data)

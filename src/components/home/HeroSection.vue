@@ -404,9 +404,8 @@ const fetchDailySentence = async () => {
     console.log('API 响应数据:', response)
 
     // 响应拦截器已返回 response.data，所以这里 response 就是实际的响应数据
-    // 根据 swagger 文档，返回格式为 { sentence: "..." }
-    if (response && typeof response === 'object' && 'data' in response) {
-      dailySentence.value = String(response.data.sentence)
+    if (response && typeof response === 'object' && 'sentence' in response) {
+      dailySentence.value = String(response.sentence)
     } 
   } catch (error) {
     console.error('获取每日句子失败:', error)
